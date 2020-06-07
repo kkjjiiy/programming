@@ -1,0 +1,27 @@
+from bokeh.io import show
+from bokeh.plotting import figure, output_file
+from bokeh.layouts import row, column
+from bokeh.models import (GMapPlot, GMapOptions, ColumnDataSource, Circle, Range1d,PanTool, WheelZoomTool, BoxSelectTool)
+import pandas as pd
+map_options = GMapOptions(lat=25.04, lng=121.52, map_type="terrain", zoom=5)
+plot = GMapPlot(x_range=Range1d(), y_range=Range1d(), map_options=map_options)
+plot.api_key = "AIzaSyBUI0tbKQ3JqAi1fMOGHAcG-I4hxCmDvr8"
+plot.add_tools(PanTool(), WheelZoomTool(), BoxSelectTool())
+
+data = pd.read_html('https://erdb.epa.gov.tw/DataRepository/Statistics/AirQualityIndicators.aspx')[5]
+for title in data:
+	print("")
+title_data = data[['統計區','總計']]
+title_data.rename(columns = {'統計區' : 'city'}, inplace = True)
+title_data.rename(columns = {'總計' : 'total'}, inplace = True)
+csvdata=pd.read_csv("tw_latlng.csv")
+csvdata = csvdata.merge(title_data, on = 'city')
+csvdata["total"]=csvdata.total/3
+print(csvdata)
+	
+source = ColumnDataSource(csvdata)
+
+circle = Circle(x="lng", y="lat", size="total", fill_color="red", fill_alpha=0.8, line_color=None)
+plot.add_glyph(source, circle)
+
+show(plot)
